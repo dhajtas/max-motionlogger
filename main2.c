@@ -194,10 +194,10 @@ int main(void)
 					
 					SaveLog(filename_dat, data_txt, 0xFF);
 					
-					sprintf_P(filename_dat,PSTR("aaa.dat"));
+//					sprintf_P(filename_dat,PSTR("aaa.dat"));
 //					data_txt = CreateFilename(data_txt, filename_dat, Log_num);
 					
-//					openFile(CreateFilename(data_txt, filename_dat, Log_num));				//,0,0);		// create file with name from config
+					openFile(CreateFilename(data_txt, filename_dat, Log_num));				//,0,0);		// create file with name from config
 					SaveLog(filename_dat, data_txt, 0xFE);
 					
 					i = openFile(filename_dat);
