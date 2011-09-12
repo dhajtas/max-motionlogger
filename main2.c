@@ -25,7 +25,7 @@ uint8_t Resets __attribute__ ((section (".noinit")));
 uint32_t Reset_long __attribute__ ((section (".noinit")));
 uint8_t Log_num __attribute__ ((section (".noinit")));
 
-volatile uint8_t Power;
+//volatile uint8_t Power;
 volatile uint8_t Status;
 
 void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
