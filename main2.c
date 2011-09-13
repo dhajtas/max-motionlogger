@@ -98,8 +98,8 @@ int main(void)
 					break;
 			case	3:	//Power down until sd crd is inserted
 //#if	BIGAVR == 0
-//					SD_Check();
-					if(Status & STAT_SD_PRESENT)
+					if(SD_Check())
+//					if(SD_Status & SDSTAT_PRESENT)
 //#endif					
 					{
 						SD_PULLUP_OFF;		// disable pullup
@@ -112,8 +112,8 @@ int main(void)
 					PRR = _BV(PRTWI)|_BV(PRTIM0)|_BV(PRTIM1)|_BV(PRADC)|_BV(PRTIM2)|_BV(PRSPI)|_BV(PRUSART0);	//power reduction register, SPI, UART, I2C, ADC, TIMER0,1,(2?), comparator, brown-out, 
 					//skontrolovat opatovne spustenie az bude treba!!!!
 //#endif					
-					SMCR = POWER_DOWN;
 					sleep_bod_disable();
+					SMCR = POWER_DOWN;
 					sei();
 					sleep_enable();
 					sleep_cpu();
@@ -132,16 +132,13 @@ int main(void)
 						sm = 0;
 						break;
 					}
-					Power = 2;
+//					Power = 2;
 					error = SD_Init();		// power on and setup SD card
-					if(!error) 
+					if(error) 
 					{
-//						Status |= STAT_SD_PRESENT;
-						sm++;
+						i++;
 						break;
-					}
-					i++;
-					break;
+					}						// if no error cnt to case 5
 			case	5:	// Read CRD info
 					error = getBootSectorData(); //read boot sector and keep necessary data in global variables, nonatomic
 					if(error) 	
@@ -159,11 +156,11 @@ int main(void)
 						Alarm_i = error;
 						Status = 0;
 					}
-					Power = SD_Idle(0);					//keep power off before start of measurement, SPI disabled as well
+					SD_Idle(0);					//keep power off before start of measurement, SPI disabled as well
 //					Power = 1;
 					sei();
 						
-					sm++;
+					sm = 6;
 //					CLKPR = 0x80;					// reduce internal clk speed to 1MHz to save power during RTC events
 //					CLKPR = 0x03;
 					PRR = _BV(PRTWI)|_BV(PRTIM0)|_BV(PRTIM1)|_BV(PRADC)|_BV(PRSPI)|_BV(PRUSART0);	//power reduction register, SPI, UART, I2C, ADC, TIMER0,1,(2?), comparator, brown-out, 

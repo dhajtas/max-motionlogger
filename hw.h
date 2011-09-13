@@ -3,13 +3,14 @@
 #define HW_H_
 
 extern volatile uint8_t Status; 
+ 
 extern volatile uint8_t Power;
  
 #define STAT_LIS_DATA_RDY	0x80
 #define STAT_RTC_UPDATE		0x40
 #define STAT_WRITE_DATA		0x20
 #define STAT_DATA_BANK		0x10
-#define STAT_SD_PRESENT		0x08
+//#define STAT_SD_PRESENT		0x08  //moved to SDSTAT defined in sd_routines
 #define STAT_BATT_LOW		0x04
 #define STAT_MEASUREMENT	0x02
 #define STAT_MAIN_ERROR		0x01

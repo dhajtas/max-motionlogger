@@ -63,12 +63,21 @@
 #define READ_OCR				 58
 #define CRC_ON_OFF               59
 
+#define SDSTAT_PRESENT			0x01
+#define SDSTAT_NOTINIT			0x02
+#define SDSTAT_INIT				0x04
+//#define SDSTAT_					0x08
+//#define SDSTAT_					0x10
+//#define SDSTAT_					0x20
+//#define SDSTAT_					0x40
+#define SDSTAT_POWER			0x80
 
 #define ON     1
 #define OFF    0
 
 volatile uint32_t startBlock, totalBlocks; 
 volatile uint8_t SDHC_flag, cardType, buffer[512];
+extern volatile uint8_t SD_Status;
 
 void SD_Init_hw(void);
 

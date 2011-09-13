@@ -22,14 +22,16 @@
 #include "SD_routines.h"
 //#include "UART_routines.h"
 
-extern volatile uint8_t Power;
+//extern volatile uint8_t Power;
 extern uint8_t Atomic;
+volatile uint8_t SD_Status;
 
 #if BIGAVR == 0
 ISR(SD_DETECT_INT_VECT)
 {
 	EIMSK &= ~(_BV(SD_DETECT_INT));
-	Status |= STAT_SD_PRESENT;
+	SD_Status |= (SDSTAT_PRESENT | SDSTAT_NOTINIT);
+	//sei();							//???
 }
 #endif		//BIGAVR
 
@@ -51,8 +53,8 @@ void SD_Init_hw(void)
 	// pull-up on reset enable!
 	
 //setting up interrupt
-	EIMSK &= ~(_BV(SD_DETECT_INT));				// disable INT1
-	EICRA &= SD_DETECT_VAL; // low level
+	EIMSK &= ~(_BV(SD_DETECT_INT));	// disable INT1
+	EICRA &= SD_DETECT_VAL; 			// low level
 //	EICRA |= _BV(ISC10);				// logical change 
 	EIMSK |= _BV(SD_DETECT_INT);
 #endif 			//BIGAVR
@@ -82,7 +84,7 @@ uint8_t SD_Init(void)
 	SPI_LOW_SPEED;
 
 // after each power up
-	if(Power != 1)					
+	if(!(SD_Stat & SDSTAT_POWER))					
 	{
 		SD_CS_DEASSERT;					// pull high CS before starting the interface
 		SD_POWER_ON;
@@ -137,7 +139,7 @@ uint8_t SD_Init(void)
 	}while(response != 0x00);
 
 //only in init
-	if(Power == 2)		
+	if(SD_Stat & SDSTAT_NOTINIT)		
 	{
 		retry = 0;
 		SDHC_flag = 0;
@@ -160,6 +162,7 @@ uint8_t SD_Init(void)
 			else 
 				cardType = 3;
 		}
+		SD_Stat &= ~SDSTAT_NOTINIT;
 	}	
 
 //SD_sendCommand(CRC_ON_OFF, OFF); //disable CRC; deafault - CRC disabled in SPI mode
@@ -168,7 +171,7 @@ uint8_t SD_Init(void)
 // test to save power
 	SPI_HIGH_SPEED;
 	
-	Power = 3;
+	SD_Stat |= SDSTAT_INIT;
 	
 	return(0); //successful return
 }
@@ -186,7 +189,7 @@ uint8_t SD_Check(void)
 	SD_PULLUP_ON;
 	if(SD_DETECT_PIN & _BV(SD_DETECT))
 	{
-		Status &= ~STAT_SD_PRESENT;
+		SD_Status &= ~SDSTAT_PRESENT;
 		EIMSK |= _BV(SD_DETECT_INT);		// start the interrupt again
 		return(0);
 	}
@@ -233,6 +236,9 @@ uint8_t SD_Idle(uint8_t power)
 
 	SD_POWER_OFF;					// switch off power for SD card
 	SPI_Init(SPI_SD_OFF);			// disable SPI and tristate the port
+	SD_Status |= SDSTAT_NOTINIT;
+	SD_Status &= ~(SDSTAT_INIT | SDSTAT_POWER);
+	
 	return(0);
 }
 
