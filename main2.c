@@ -213,7 +213,7 @@ int main(void)
 
 					LIS_Start();					// starts LIS
 					
-					Power = SD_Idle(1);				// switch off SD card
+					SD_Idle(1);						// switch off SD card
 
 					sei();
 					sm++;
@@ -250,7 +250,7 @@ int main(void)
 						
 					while(SPI_RAM_end)
 					{
-						writeFile();		// save last data + zeroes until end of the block
+						writeFile();				// save last data + zeroes until end of the block
 					}
 					closeFile();
 
@@ -268,7 +268,7 @@ int main(void)
 					if(Status & STAT_BATT_LOW)
 						sm = 11;
 
-					Power = SD_Idle(0);			// put SD into IDLE mode and switch off the power
+					SD_Idle(0);					// put SD into IDLE mode and switch off the power
 					PRR = _BV(PRSPI)|_BV(PRUSART0)|_BV(PRTWI)|_BV(PRTIM0)|_BV(PRTIM1)|_BV(PRADC);	//power reduction register, SPI, UART, I2C, ADC, TIMER0,1,(2?), comparator, brown-out, 
 					SMCR = POWER_SAVE;
 					break;
@@ -376,7 +376,7 @@ int main(void)
 			if((Status & STAT_WRITE_DATA) == 0)		// just finished 16k block
 			{
 					battery = ADC_Check_Batt();
-					Power = SD_Idle(1);
+					SD_Idle(1);
 			}
 		}
 	}

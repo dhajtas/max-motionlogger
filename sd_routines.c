@@ -86,7 +86,7 @@ uint8_t SD_Init(void)
 	SPI_LOW_SPEED;
 
 // after each power up
-	if(!(SD_Stat & SDSTAT_POWER))					
+	if(!(SD_Status & SDSTAT_POWER))					
 	{
 		SD_CS_DEASSERT;					// pull high CS before starting the interface
 		SD_POWER_ON;
@@ -237,9 +237,6 @@ uint8_t SD_Idle(uint8_t power)
 	SD_CS_DEASSERT;
 	SPI_Send8(0xff,SD_SPI_PORT);
 	SPI_Send8(0xff,SD_SPI_PORT);
-	
-	SD_Status |= SDSTAT_IDLE;
-	
 	
 	if(power)
 	{
