@@ -195,13 +195,7 @@ int main(void)
 //					data_txt = CreateFilename(data_txt, filename_dat, Log_num);
 					
 					openFile(CreateFilename(data_txt, filename_dat, Log_num));				//,0,0);		// create file with name from config
-					SaveLog(filename_dat, data_txt, 0xFE);
 					
-					i = openFile(filename_dat);
-					closeFile();
-					SaveLog(filename_dat, data_txt, i);
-					
-					openFile(filename_dat);
 					
 					empty_data.x = 0x0001;			// start of block
 					empty_data.y = (uint16_t)Log_num;

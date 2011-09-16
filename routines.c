@@ -157,7 +157,7 @@ uint8_t getDec(uint8_t *data)
 char* CreateFilename(char *dest, char *src, uint8_t number)
 {
 //	char s_num[3];
-	sprintf(dest,"aaa.d%02d",number);
+	sprintf(dest,"%s.d%02d",src,number);
 //	dest = strcpy(dest,src);
 //	dest = strcat(dest,".d");
 //	dest = strcat(dest, itoa(number,s_num,10));
