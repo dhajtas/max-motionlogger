@@ -109,7 +109,7 @@ int main(void)
 						break;
 					}
 //#if BIGAVR == 0
-					PRR = _BV(PRTWI)|_BV(PRTIM0)|_BV(PRTIM1)|_BV(PRADC)|_BV(PRTIM2)|_BV(PRSPI)|_BV(PRUSART0);	//power reduction register, SPI, UART, I2C, ADC, TIMER0,1,(2?), comparator, brown-out, 
+					PRR = _BV(PRTWI)|_BV(PRTIM0)|_BV(PRTIM1)|_BV(PRADC)|_BV(PRTIM2)|_BV(PRSPI)|_BV(PRUSART0);	//power reduction register, SPI, UART, I2C, ADC, TIMER0,1,2, comparator, brown-out, 
 					//skontrolovat opatovne spustenie az bude treba!!!!
 //#endif					
 					sleep_bod_disable();
@@ -195,13 +195,7 @@ int main(void)
 //					data_txt = CreateFilename(data_txt, filename_dat, Log_num);
 					
 					openFile(CreateFilename(data_txt, filename_dat, Log_num));				//,0,0);		// create file with name from config
-					SaveLog(filename_dat, data_txt, 0xFE);
 					
-					i = openFile(filename_dat);
-					closeFile();
-					SaveLog(filename_dat, data_txt, i);
-					
-					openFile(filename_dat);
 					
 					empty_data.x = 0x0001;			// start of block
 					empty_data.y = (uint16_t)Log_num;
@@ -348,23 +342,33 @@ int main(void)
 				}
 			}
 		}
-		else if(sm > 5)
+		else 
 		{
-			if(RTC_CmpDate(&Date, &ADate[(Log_num<<1)]))
+			if(sm > 5)
 			{
-				if(RTC_CmpTime(&Time, &ATime[(Log_num<<1)]))
+				SD_Check();
+			
+				if(RTC_CmpDate(&Date, &ADate[(Log_num<<1)]))
 				{
-					sm = 7;
+					if(RTC_CmpTime(&Time, &ATime[(Log_num<<1)]))
+					{
+						sm = 7;
+					}
 				}
 			}
 		}
 
-		if (Status & STAT_WRITE_DATA)			//save data
-		{	
-			if(Power < 2)					// if waking up from power down or idle, else already initialised...
+		if (Status & STAT_WRITE_DATA)		//save data
+		{
+			if(!SD_Check())
 			{
-				SD_Init();					// start the SD card and initialise if powered off
+				SPI_Switch(SPI_LIS);
+				LIS_Stop();
+				Status &= ~STAT_MEASUREMENT;
+				sm = 3;
 			}
+	
+			SD_Init();						// start the SD card and initialise if powered off
 				
 			writeFile();					//atomic for read RAM! and other stuff as well - probably interrupt during SD work will corrupt stack...
 			data_i++;

@@ -66,7 +66,7 @@
 #define SDSTAT_PRESENT			0x01
 #define SDSTAT_NOTINIT			0x02
 #define SDSTAT_INIT				0x04
-//#define SDSTAT_					0x08
+#define SDSTAT_IDLE				0x08
 //#define SDSTAT_					0x10
 //#define SDSTAT_					0x20
 //#define SDSTAT_					0x40
