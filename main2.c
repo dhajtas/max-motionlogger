@@ -25,7 +25,7 @@ uint8_t Resets __attribute__ ((section (".noinit")));
 uint32_t Reset_long __attribute__ ((section (".noinit")));
 uint8_t Log_num __attribute__ ((section (".noinit")));
 
-volatile uint8_t Power;
+//volatile uint8_t Power;
 volatile uint8_t Status;
 
 void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
@@ -109,7 +109,7 @@ int main(void)
 						break;
 					}
 //#if BIGAVR == 0
-					PRR = _BV(PRTWI)|_BV(PRTIM0)|_BV(PRTIM1)|_BV(PRADC)|_BV(PRTIM2)|_BV(PRSPI)|_BV(PRUSART0);	//power reduction register, SPI, UART, I2C, ADC, TIMER0,1,(2?), comparator, brown-out, 
+					PRR = _BV(PRTWI)|_BV(PRTIM0)|_BV(PRTIM1)|_BV(PRADC)|_BV(PRTIM2)|_BV(PRSPI)|_BV(PRUSART0);	//power reduction register, SPI, UART, I2C, ADC, TIMER0,1,2, comparator, brown-out, 
 					//skontrolovat opatovne spustenie az bude treba!!!!
 //#endif					
 					sleep_bod_disable();
@@ -348,23 +348,33 @@ int main(void)
 				}
 			}
 		}
-		else if(sm > 5)
+		else 
 		{
-			if(RTC_CmpDate(&Date, &ADate[(Log_num<<1)]))
+			if(sm > 5)
 			{
-				if(RTC_CmpTime(&Time, &ATime[(Log_num<<1)]))
+				SD_Check();
+			
+				if(RTC_CmpDate(&Date, &ADate[(Log_num<<1)]))
 				{
-					sm = 7;
+					if(RTC_CmpTime(&Time, &ATime[(Log_num<<1)]))
+					{
+						sm = 7;
+					}
 				}
 			}
 		}
 
-		if (Status & STAT_WRITE_DATA)			//save data
-		{	
-			if(Power < 2)					// if waking up from power down or idle, else already initialised...
+		if (Status & STAT_WRITE_DATA)		//save data
+		{
+			if(!SD_Check())
 			{
-				SD_Init();					// start the SD card and initialise if powered off
+				SPI_Switch(SPI_LIS);
+				LIS_Stop();
+				Status &= ~STAT_MEASUREMENT;
+				sm = 3;
 			}
+	
+			SD_Init();						// start the SD card and initialise if powered off
 				
 			writeFile();					//atomic for read RAM! and other stuff as well - probably interrupt during SD work will corrupt stack...
 			data_i++;

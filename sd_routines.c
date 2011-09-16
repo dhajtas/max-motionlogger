@@ -58,6 +58,8 @@ void SD_Init_hw(void)
 //	EICRA |= _BV(ISC10);				// logical change 
 	EIMSK |= _BV(SD_DETECT_INT);
 #endif 			//BIGAVR
+
+	SD_Status = 0x00;
 }
 
 //void SD_Pullup(uint8_t enable)
@@ -89,6 +91,8 @@ uint8_t SD_Init(void)
 		SD_CS_DEASSERT;					// pull high CS before starting the interface
 		SD_POWER_ON;
 		_delay_ms(10);
+		
+		SD_Status |= SDSTAT_POWER;
 		
 		for(i=0;i<10;i++)
 			SPI_Send8(0xff,SD_SPI_PORT);   	//80 clock pulses spent before sending the first command
@@ -122,24 +126,29 @@ uint8_t SD_Init(void)
 			} //time out
 
 		}while(response != 0x01);
+		
+		SD_Status |= SDSTAT_IDLE;
 	}
 	
 // only if activation from idle
-	retry = 0;
-
-	do
+	if(SD_Status & SDSTAT_IDLE)
 	{
-		response = SD_sendCommand(APP_CMD,0); //CMD55, must be sent before sending any ACMD command
-		response = SD_sendCommand(SD_SEND_OP_COND,0x40000000); //ACMD41
-		retry++;
-		if(retry>0xfe) 
+		retry = 0;
+		do
 		{
-			return 2;  		//time out, card initialization failed
-		} 
-	}while(response != 0x00);
+			response = SD_sendCommand(APP_CMD,0); //CMD55, must be sent before sending any ACMD command
+			response = SD_sendCommand(SD_SEND_OP_COND,0x40000000); //ACMD41
+			retry++;
+			if(retry>0xfe) 
+			{
+				return 2;  		//time out, card initialization failed
+			} 
+		}while(response != 0x00);
+		SD_Status &= ~SDSTAT_IDLE;
+	}
 
 //only in init
-	if(SD_Stat & SDSTAT_NOTINIT)		
+	if(SD_Status & SDSTAT_NOTINIT)		
 	{
 		retry = 0;
 		SDHC_flag = 0;
@@ -162,7 +171,7 @@ uint8_t SD_Init(void)
 			else 
 				cardType = 3;
 		}
-		SD_Stat &= ~SDSTAT_NOTINIT;
+		SD_Status &= ~SDSTAT_NOTINIT;
 	}	
 
 //SD_sendCommand(CRC_ON_OFF, OFF); //disable CRC; deafault - CRC disabled in SPI mode
@@ -171,7 +180,7 @@ uint8_t SD_Init(void)
 // test to save power
 	SPI_HIGH_SPEED;
 	
-	SD_Stat |= SDSTAT_INIT;
+	SD_Status |= SDSTAT_INIT;
 	
 	return(0); //successful return
 }
@@ -229,14 +238,18 @@ uint8_t SD_Idle(uint8_t power)
 	SPI_Send8(0xff,SD_SPI_PORT);
 	SPI_Send8(0xff,SD_SPI_PORT);
 	
+	SD_Status |= SDSTAT_IDLE;
+	
+	
 	if(power)
 	{
+		SD_Status |= SDSTAT_IDLE;
 		return(1);
 	}
 
 	SD_POWER_OFF;					// switch off power for SD card
 	SPI_Init(SPI_SD_OFF);			// disable SPI and tristate the port
-	SD_Status |= SDSTAT_NOTINIT;
+//	SD_Status |= SDSTAT_NOTINIT;	// only if first time powered on - checking the type of card after init!!!
 	SD_Status &= ~(SDSTAT_INIT | SDSTAT_POWER);
 	
 	return(0);
