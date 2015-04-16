@@ -1,0 +1,1 @@
+AVR based wrist motion logger logging on SD card in SPI mode (FAT32)
